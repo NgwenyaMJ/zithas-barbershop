@@ -1,11 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import {
+  createServiceRoleClient,
+  getStaffAuthorization,
+  type StaffAuthorization
+} from "@/lib/supabase/server";
 
 function db() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false } });
+  return createServiceRoleClient();
+}
+
+const BOOKING_STATUSES = [
+  "pending",
+  "confirmed",
+  "in_progress",
+  "completed",
+  "cancelled"
+] as const;
+
+type BookingStatus = (typeof BOOKING_STATUSES)[number];
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function staffErrorResponse(authorization: StaffAuthorization) {
+  if (authorization.kind === "unauthenticated") {
+    return NextResponse.json({ error: "Authentication is required." }, { status: 401 });
+  }
+
+  if (authorization.kind === "forbidden") {
+    return NextResponse.json({ error: "You are not authorized for this operation." }, { status: 403 });
+  }
+
+  return NextResponse.json({ error: "Service is temporarily unavailable." }, { status: 503 });
+}
+
+function isValidStatus(value: unknown): value is BookingStatus {
+  return typeof value === "string" && BOOKING_STATUSES.includes(value as BookingStatus);
 }
 
 export async function POST(request: NextRequest) {
@@ -38,22 +68,79 @@ export async function GET(request: NextRequest) {
   if (!client) return NextResponse.json({ error: "Database is not configured. Connect Supabase first." }, { status: 503 });
   const reference = request.nextUrl.searchParams.get("reference");
   if (reference) {
-    const { data, error } = await client.from("bookings").select("reference,customer_name,service_name,barber_name,booking_date,booking_time,status").eq("reference", reference.toUpperCase()).single();
+    const { data, error } = await client
+      .from("bookings")
+      .select("customer_name,service_name,barber_name,booking_date,booking_time,status")
+      .eq("reference", reference.toUpperCase())
+      .single();
+
     if (error || !data) return NextResponse.json({ error: "No booking was found with that reference." }, { status: 404 });
     return NextResponse.json({ booking: data });
   }
-  const { data, error } = await client.from("bookings").select("*").order("booking_date", { ascending: true }).order("booking_time", { ascending: true }).limit(100);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const authorization = await getStaffAuthorization();
+  if (authorization.kind !== "authorized") {
+    return staffErrorResponse(authorization);
+  }
+
+  const { data, error } = await client
+    .from("bookings")
+    .select("id,reference,customer_name,service_name,barber_name,booking_date,booking_time,status")
+    .order("booking_date", { ascending: true })
+    .order("booking_time", { ascending: true })
+    .limit(100);
+
+  if (error) {
+    console.error("Unable to load staff bookings.", error);
+    return NextResponse.json({ error: "Unable to load bookings." }, { status: 500 });
+  }
+
   return NextResponse.json({ bookings: data || [] });
 }
 
 export async function PATCH(request: NextRequest) {
+  const authorization = await getStaffAuthorization();
+  if (authorization.kind !== "authorized") {
+    return staffErrorResponse(authorization);
+  }
+
   const client = db();
-  if (!client) return NextResponse.json({ error: "Database is not configured." }, { status: 503 });
-  const { id, status } = await request.json();
-  const allowed = ["pending","confirmed","in_progress","completed","cancelled"];
-  if (!id || !allowed.includes(status)) return NextResponse.json({ error: "Invalid update." }, { status: 400 });
-  const { error } = await client.from("bookings").update({ status }).eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!client) return NextResponse.json({ error: "Service is temporarily unavailable." }, { status: 503 });
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid update request." }, { status: 400 });
+  }
+
+  if (
+    !body ||
+    typeof body !== "object" ||
+    !("id" in body) ||
+    !("status" in body) ||
+    typeof body.id !== "string" ||
+    !UUID_PATTERN.test(body.id) ||
+    !isValidStatus(body.status)
+  ) {
+    return NextResponse.json({ error: "Invalid update request." }, { status: 400 });
+  }
+
+  const { data, error } = await client
+    .from("bookings")
+    .update({ status: body.status })
+    .eq("id", body.id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Unable to update booking status.", error);
+    return NextResponse.json({ error: "Unable to update booking." }, { status: 500 });
+  }
+
+  if (!data) {
+    return NextResponse.json({ error: "Booking not found." }, { status: 404 });
+  }
+
   return NextResponse.json({ success: true });
 }
