@@ -85,3 +85,4 @@ Without Supabase credentials, the public pages render, but booking submission, l
 ## Deploy to Vercel
 
 Push the project to GitHub, import the repository in Vercel, set the environment variables in Vercel Project Settings, then deploy. Use `npm run build` locally before deployment.
+"# zithas-barbershop" 
