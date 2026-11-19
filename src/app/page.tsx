@@ -1,0 +1,31 @@
+import Link from "next/link";
+import { ArrowRight, Clock3, MapPin, ShieldCheck, Star, Scissors, CalendarCheck } from "lucide-react";
+import { services } from "@/lib/data";
+import { formatCurrency } from "@/lib/utils";
+
+export default function Home() {
+  return <>
+    <section className="relative overflow-hidden border-b border-white/10">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_75%_30%,rgba(201,166,107,.16),transparent_42%)]"/>
+      <div className="container relative grid min-h-[650px] items-center gap-12 py-20 lg:grid-cols-[1.1fr_.9fr]">
+        <div><p className="eyebrow">Alexandra · Johannesburg</p><h1 className="mt-6 max-w-3xl text-5xl font-black leading-[1.06] tracking-tight md:text-7xl">A fresh cut.<br/><span className="gold-text">A sharper you.</span></h1><p className="mt-7 max-w-xl text-lg leading-8 text-[#b8b3a9]">Good cuts are more than a service. They're a confidence boost. Book your barber, skip the guesswork and leave looking your best.</p>
+          <div className="mt-9 flex flex-wrap gap-4"><Link href="/book" className="gold-button inline-flex items-center gap-2 rounded-full px-7 py-4 font-bold">Book an appointment <ArrowRight size={17}/></Link><Link href="/queue" className="outline-button rounded-full px-7 py-4 font-semibold">View live queue</Link></div>
+          <div className="mt-12 flex flex-wrap gap-8 text-sm text-[#b8b3a9]"><span className="flex items-center gap-2"><MapPin size={16} className="gold-text"/> Alexandra, Johannesburg</span><span className="flex items-center gap-2"><Clock3 size={16} className="gold-text"/> Mon–Sat · 09:00–17:00</span></div>
+        </div>
+        <div className="relative mx-auto w-full max-w-[500px]">
+          <div className="absolute -inset-4 rounded-[34px] border border-[#c9a66b]/20"/>
+          <div className="relative flex aspect-[4/5] flex-col justify-between overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(145deg,#35312a,#171715_52%,#080808)] p-8">
+            <div className="absolute right-[-40px] top-16 h-64 w-64 rounded-full border border-[#c9a66b]/20"/><div className="absolute right-[-5px] top-28 h-48 w-48 rounded-full border border-[#c9a66b]/30"/><div className="relative"><Scissors size={42} className="gold-text"/><p className="eyebrow mt-5">The Zithas experience</p><p className="mt-3 max-w-xs text-4xl font-black leading-tight">Precision in every detail.</p></div>
+            <div className="relative grid grid-cols-2 gap-3"><div className="rounded-xl border border-white/10 bg-black/30 p-4"><p className="text-2xl font-black gold-text">6+</p><p className="mt-1 text-xs text-[#b8b3a9]">Signature services</p></div><div className="rounded-xl border border-white/10 bg-black/30 p-4"><p className="text-2xl font-black gold-text">100%</p><p className="mt-1 text-xs text-[#b8b3a9]">Fresh confidence</p></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="services" className="container py-24"><div className="flex flex-col justify-between gap-5 md:flex-row md:items-end"><div><p className="eyebrow">What we do</p><h2 className="mt-3 text-4xl font-black">The right cut for <span className="gold-text">your style.</span></h2></div><p className="max-w-md text-[#a7a39b]">From a clean fade to a complete grooming refresh, find the service that suits you.</p></div>
+      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{services.map((s,i)=><article key={s.id} className="panel rounded-2xl p-6 transition hover:-translate-y-1 hover:border-[#806b49]"><div className="flex items-center justify-between"><span className="text-xs tracking-widest text-[#8d877d]">0{i+1}</span><Scissors className="gold-text" size={20}/></div><h3 className="mt-7 text-xl font-bold">{s.name}</h3><p className="mt-2 min-h-12 text-sm leading-6 text-[#a7a39b]">{s.description}</p><div className="mt-6 flex items-center justify-between border-t border-white/10 pt-5"><span className="text-xl font-black gold-text">{formatCurrency(s.price)}</span><span className="text-xs text-[#a7a39b]">{s.duration} min</span></div></article>)}</div>
+      <div className="mt-9 text-center"><Link href="/book" className="gold-button inline-flex items-center gap-2 rounded-full px-7 py-3 font-bold">Choose your service <ArrowRight size={16}/></Link></div>
+    </section>
+    <section id="about" className="border-y border-white/10 bg-[#151513] py-20"><div className="container grid gap-12 md:grid-cols-2 md:items-center"><div><p className="eyebrow">More than a haircut</p><h2 className="mt-4 text-4xl font-black leading-tight">Your neighbourhood spot for <span className="gold-text">looking sharp.</span></h2><p className="mt-5 leading-8 text-[#a7a39b]">At Zithas Barbershop, we keep the experience simple: skilled barbers, attention to detail and a welcoming chair. Book ahead or check the queue before you arrive.</p><Link href="/book" className="mt-8 inline-flex items-center gap-2 font-bold gold-text">Come through <ArrowRight size={16}/></Link></div><div className="grid gap-4 sm:grid-cols-2"><div className="panel rounded-2xl p-6"><CalendarCheck className="gold-text"/><h3 className="mt-5 font-bold">Easy booking</h3><p className="mt-2 text-sm leading-6 text-[#a7a39b]">Request a time that works for you.</p></div><div className="panel rounded-2xl p-6"><Clock3 className="gold-text"/><h3 className="mt-5 font-bold">Queue visibility</h3><p className="mt-2 text-sm leading-6 text-[#a7a39b]">Check queue activity before visiting.</p></div><div className="panel rounded-2xl p-6"><ShieldCheck className="gold-text"/><h3 className="mt-5 font-bold">Personal service</h3><p className="mt-2 text-sm leading-6 text-[#a7a39b]">A service experience centred on you.</p></div><div className="panel rounded-2xl p-6"><Star className="gold-text"/><h3 className="mt-5 font-bold">Your style</h3><p className="mt-2 text-sm leading-6 text-[#a7a39b]">Tell us the look you're after.</p></div></div></div></section>
+    <section className="container py-20 text-center"><p className="eyebrow">Ready when you are</p><h2 className="mt-4 text-4xl font-black">Your next fresh cut is <span className="gold-text">one booking away.</span></h2><Link href="/book" className="gold-button mt-8 inline-flex rounded-full px-8 py-4 font-bold">Book your appointment</Link></section>
+  </>;
+}
